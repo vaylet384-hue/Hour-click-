@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vaqt Kliker Pro - Energiya Tizimi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Orbitron -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        digital: ['Orbitron', 'sans-serif']
+                    },
+                    colors: {
+                        glass: 'rgba(255, 255, 255, 0.08)',
+                        glassBorder: 'rgba(255, 255, 255, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #090614;
+            min-height: 100vh;
+            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            transition: background 0.5s ease;
+        }
+
+        /* Dynamic Themes */
+        body.theme-cyber { background: radial-gradient(circle at center, #1a0b36 0%, #080312 100%); }
+        body.theme-space { background: radial-gradient(circle at center, #051923 0%, #000814 100%); }
+        body.theme-sunset { background: radial-gradient(circle at center, #2b0927 0%, #0f0210 100%); }
+        body.theme-emerald { background: radial-gradient(circle at center, #062c22 0%, #010d0a 100%); }
+
+        /* Glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-btn {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Ripple Effect */
+        .ripple-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.7) 0%, rgba(112, 0, 255, 0.2) 70%, transparent 100%);
+            transform: scale(0);
+            animation: ripple-effect 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-effect {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Click Particles */
+        .click-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            font-weight: 800;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 0 20px rgba(112, 0, 255, 0.8);
+            animation: float-up 0.8s ease-out forwards;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @keyframes float-up {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.8) translateY(0);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2) translateY(-30px);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1) translateY(-60px);
+            }
+        }
+
+        /* Custom Watch Frame Rings */
+        .frame-neon { border-color: #00f0ff !important; box-shadow: 0 0 35px rgba(0, 240, 255, 0.6); }
+        .frame-gold { border-color: #ffd700 !important; box-shadow: 0 0 35px rgba(255, 215, 0, 0.6); }
+        .frame-plasma { border-color: #ff007f !important; box-shadow: 0 0 35px rgba(255, 0, 127, 0.6); }
+        .frame-emerald { border-color: #10b981 !important; box-shadow: 0 0 35px rgba(16, 185, 129, 0.6); }
+
+        /* Energy indicator shaking when empty */
+        .shake-energy {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px); }
+            40%, 80% { transform: translateX(4px); }
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    </style>
+</head>
+<body class="theme-cyber flex flex-col min-h-screen justify-between items-center relative select-none">
+
+    <!-- TOP BAR -->
+    <header class="w-full max-w-md p-3 flex justify-between items-center z-20">
+        <div class="flex items-center gap-2.5 glass-card px-3 py-1.5 rounded-2xl">
+            <div id="userAvatar" class="w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-500 to-purple-600 flex items-center justify-center font-bold text-sm text-white shadow-md">
+                U
+            </div>
+            <div>
+                <h3 id="userNameDisplay" class="font-bold text-xs text-white leading-tight">Foydalanuvchi</h3>
+                <p id="userRankDisplay" class="text-[10px] text-cyan-400 font-semibold">Novice Timelord</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <!-- Audio Selector Modal Toggle -->
+            <button onclick="openAudioModal()" class="glass-btn w-9 h-9 rounded-2xl flex items-center justify-center text-cyan-400 text-sm hover:bg-white/10 transition">
+                <i class="fas fa-music"></i>
+            </button>
+            <!-- Settings Toggle -->
+            <button onclick="openTab('sozlamalar')" class="glass-btn w-9 h-9 rounded-2xl flex items-center justify-center text-purple-400 text-sm hover:bg-white/10 transition">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="w-full max-w-md px-3 flex-1 flex flex-col justify-center items-center relative z-10 my-auto">
+
+        <!-- 1. ASOSIY CLICKER TAB -->
+        <div id="tab-asosiy" class="tab-content w-full flex flex-col items-center">
+
+            <!-- 4 ta Burchaksimon Action Boostlar -->
+            <div class="w-full grid grid-cols-4 gap-1.5 mb-3">
+                <!-- 1. Boost -->
+                <button id="boostBtn" onclick="activateBoost()" class="glass-btn ripple-container p-2 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div class="text-cyan-400 text-base mb-0.5"><i class="fas fa-bolt"></i></div>
+                    <span class="text-[10px] font-bold text-white leading-tight">BOOST</span>
+                    <span class="text-[8px] text-cyan-300 opacity-80" id="boostCostLabel">-3 min</span>
+                    <div id="boostActiveBadge" class="hidden absolute inset-0 bg-cyan-600/90 text-white font-extrabold text-xs flex items-center justify-center">
+                        <span id="boostTimerText">15s</span>
+                    </div>
+                </button>
+
+                <!-- 2. Avto-bosish -->
+                <button id="autoClickBtn" onclick="activateAutoClick()" class="glass-btn ripple-container p-2 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div class="text-purple-400 text-base mb-0.5"><i class="fas fa-robot"></i></div>
+                    <span class="text-[10px] font-bold text-white leading-tight">AVTO</span>
+                    <span class="text-[8px] text-purple-300 opacity-80" id="autoStatusLabel">1m / Kun</span>
+                    <div id="autoActiveBadge" class="hidden absolute inset-0 bg-purple-600/90 text-white font-extrabold text-xs flex items-center justify-center">
+                        <span id="autoTimerText">60s</span>
+                    </div>
+                </button>
+
+                <!-- 3. Darajalar -->
+                <button onclick="openTab('darajalar')" class="glass-btn ripple-container p-2 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div class="text-pink-400 text-base mb-0.5"><i class="fas fa-clock"></i></div>
+                    <span class="text-[10px] font-bold text-white leading-tight">DARAJA</span>
+                    <span class="text-[8px] text-pink-300 opacity-80 truncate max-w-full" id="currentWatchName">O'yinchoq</span>
+                </button>
+
+                <!-- 4. LIMITNI OSHIRISH (YANGI TUGMA) -->
+                <button onclick="openLimitModal()" class="glass-btn ripple-container p-2 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group border border-amber-500/40">
+                    <div class="text-amber-400 text-base mb-0.5"><i class="fas fa-battery-charging"></i></div>
+                    <span class="text-[10px] font-bold text-amber-300 leading-tight">LIMIT</span>
+                    <span class="text-[8px] text-amber-200 opacity-90" id="currentLimitBtnLabel">100 Max</span>
+                </button>
+            </div>
+
+            <!-- Stored Time Screen Display -->
+            <div class="glass-card w-full p-3.5 rounded-3xl mb-3 text-center border-t border-cyan-500/30 relative overflow-hidden">
+                <p class="text-[10px] uppercase tracking-widest text-cyan-300 font-semibold mb-0.5">To'plangan Umumiy Vaqt</p>
+                <div id="formattedTimeDisplay" class="font-digital text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-300 my-0.5 drop-shadow-md">
+                    0 soniya
+                </div>
+                <div class="flex justify-around items-center text-[10px] text-gray-300 mt-1.5 pt-1.5 border-t border-white/5">
+                    <span><i class="fas fa-mouse-pointer text-cyan-400 mr-1"></i> Kliklar: <strong id="totalClicksDisplay" class="text-white">0</strong></span>
+                    <span><i class="fas fa-university text-emerald-400 mr-1"></i> Bank: <strong id="bankYieldDisplay" class="text-white">+0s/s</strong></span>
+                </div>
+            </div>
+
+            <!-- BIG ROUND CLOCK BUTTON WITH BOTTOM-RIGHT ENERGY DISPLAY -->
+            <div class="relative my-2 flex items-center justify-center">
+                <!-- Glowing background -->
+                <div class="absolute w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-600/20 blur-xl animate-pulse pointer-events-none"></div>
+
+                <div class="relative">
+                    <button id="bigClockBtn" 
+                            class="ripple-container relative w-52 h-52 sm:w-60 sm:h-60 rounded-full p-2 glass-btn border-4 frame-neon shadow-2xl hover:scale-105 active:scale-95 transition-all duration-150 flex items-center justify-center overflow-hidden cursor-pointer">
+                        
+                        <img id="bigClockImg" 
+                             src="https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=600&q=80" 
+                             alt="Soat" 
+                             class="w-full h-full object-cover rounded-full pointer-events-none shadow-inner transition-all duration-300">
+
+                        <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none"></div>
+                    </button>
+
+                    <!-- O'NG PASTKI KICHIK ENERGIYA KO'RSATGICHI (100 / 100) -->
+                    <div id="energyBadge" 
+                         class="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 z-20 bg-black/85 backdrop-blur-md border border-amber-400/60 px-2.5 py-1 rounded-2xl shadow-xl flex items-center gap-1.5 transition-all">
+                        <i class="fas fa-bolt text-amber-400 text-xs animate-bounce"></i>
+                        <span id="energyText" class="font-digital text-xs font-bold text-amber-300 tracking-wider">
+                            100 / 100
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-[10px] text-gray-400 mt-2 flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                <i class="fas fa-info-circle text-cyan-400"></i> Rasmni almashtirish uchun soat ustiga uzoqroq bosing!
+            </p>
+
+        </div>
+
+        <!-- 2. MINI-GAMES & TIME RUSH TAB -->
+        <div id="tab-minigames" class="tab-content hidden w-full space-y-3">
+            <div class="glass-card p-5 rounded-3xl text-center relative overflow-hidden">
+                <div class="w-12 h-12 bg-gradient-to-tr from-amber-400 to-red-500 rounded-2xl flex items-center justify-center text-xl text-white mx-auto mb-2 shadow-lg">
+                    <i class="fas fa-stopwatch"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white">Time Rush Mini-O'yini</h3>
+                <p class="text-xs text-gray-300 mb-4">30 soniya ichida iloji boricha ko'p klik qiling va 2x bonus vaqt qo'lga kiriting!</p>
+
+                <div id="rushGameArea" class="hidden my-4 p-4 bg-black/50 rounded-2xl border border-amber-500/30">
+                    <div class="flex justify-around items-center mb-3">
+                        <div>
+                            <span class="text-[10px] text-gray-400 block">Vaqt:</span>
+                            <span id="rushTimer" class="font-digital text-2xl font-bold text-amber-400">30s</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-gray-400 block">Kliklar:</span>
+                            <span id="rushClicks" class="font-digital text-2xl font-bold text-cyan-400">0</span>
+                        </div>
+                    </div>
+                    <button id="rushClickerBtn" onclick="registerRushClick()" class="w-full py-6 bg-gradient-to-r from-amber-500 to-red-600 rounded-xl text-xl font-extrabold shadow-lg active:scale-95 transition">
+                        BOSING! 🔥
+                    </button>
+                </div>
+
+                <button id="startRushBtn" onclick="startTimeRushGame()" class="w-full bg-gradient-to-r from-amber-500 to-red-600 text-white font-extrabold py-3 rounded-2xl shadow-lg hover:brightness-110 active:scale-95 transition">
+                    O'yinni Boshlash (30s)
+                </button>
+            </div>
+
+            <!-- Daily Quests -->
+            <div class="glass-card p-4 rounded-3xl">
+                <h3 class="text-sm font-bold text-cyan-300 mb-3 flex items-center gap-2">
+                    <i class="fas fa-tasks"></i> Kunlik Topshiriqlar (Daily Quests)
+                </h3>
+                <div class="space-y-2.5" id="questsList"></div>
+            </div>
+        </div>
+
+        <!-- 3. TIME BANK & INVESTMENTS TAB -->
+        <div id="tab-bank" class="tab-content hidden w-full glass-card p-5 rounded-3xl space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl border border-emerald-500/30">
+                    <i class="fas fa-university"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-white">Vaqt Banki</h2>
+                    <p class="text-xs text-emerald-400">Passiv vaqt daromadi (Passive Income)</p>
+                </div>
+            </div>
+
+            <div class="bg-black/40 p-4 rounded-2xl border border-white/10 space-y-2">
+                <div class="flex justify-between text-xs">
+                    <span class="text-gray-400">Bankdagi vaqtingiz:</span>
+                    <span id="bankDepositedDisplay" class="font-bold text-emerald-300">0 soniya</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-gray-400">Soatlik foiz stavkasi:</span>
+                    <span class="font-bold text-cyan-300">+5% / soat</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-gray-400">Hozirgi passiv daromad:</span>
+                    <span id="bankPassiveYieldText" class="font-bold text-amber-300">+0s / sekund</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="depositToBank()" class="bg-emerald-600/80 hover:bg-emerald-500 text-white font-bold py-3 rounded-2xl text-xs shadow-lg transition">
+                    <i class="fas fa-arrow-down mr-1"></i> Bankka Qo'yish (10 min)
+                </button>
+                <button onclick="withdrawFromBank()" class="bg-purple-600/80 hover:bg-purple-500 text-white font-bold py-3 rounded-2xl text-xs shadow-lg transition">
+                    <i class="fas fa-arrow-up mr-1"></i> Barchasini Yechish
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. LEADERBOARD TAB -->
+        <div id="tab-liderlar" class="tab-content hidden w-full glass-card p-5 rounded-3xl">
+            <h2 class="text-lg font-bold mb-3 text-amber-400 flex items-center gap-2">
+                <i class="fas fa-trophy"></i> Global Liderlar Paneli
+            </h2>
+            <p class="text-xs text-gray-400 mb-4">Eng ko'p vaqt yig'gan o'yinchilar reytingi</p>
+            <div class="space-y-2.5 max-h-[55vh] overflow-y-auto pr-1" id="leaderboardList"></div>
+        </div>
+
+        <!-- 5. SHOP & CUSTOMIZATION TAB -->
+        <div id="tab-dukkon" class="tab-content hidden w-full space-y-4">
+            <!-- Watch Frames Shop -->
+            <div class="glass-card p-4 rounded-3xl">
+                <h3 class="text-sm font-bold text-cyan-300 mb-3 flex items-center gap-2">
+                    <i class="fas fa-ring"></i> Soat Ramkalari (Frames)
+                </h3>
+                <div class="grid grid-cols-2 gap-2.5" id="framesGrid"></div>
+            </div>
+
+            <!-- Background Themes -->
+            <div class="glass-card p-4 rounded-3xl">
+                <h3 class="text-sm font-bold text-purple-300 mb-3 flex items-center gap-2">
+                    <i class="fas fa-palette"></i> Fon Mavzulari (Themes)
+                </h3>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button onclick="setTheme('cyber')" class="p-3 rounded-2xl bg-purple-950/60 border border-purple-500/40 text-left text-xs font-bold text-purple-200">
+                        🌆 Cyber Neon
+                    </button>
+                    <button onclick="setTheme('space')" class="p-3 rounded-2xl bg-blue-950/60 border border-cyan-500/40 text-left text-xs font-bold text-cyan-200">
+                        🌌 Deep Space
+                    </button>
+                    <button onclick="setTheme('sunset')" class="p-3 rounded-2xl bg-pink-950/60 border border-pink-500/40 text-left text-xs font-bold text-pink-200">
+                        🌅 Cyber Sunset
+                    </button>
+                    <button onclick="setTheme('emerald')" class="p-3 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-left text-xs font-bold text-emerald-200">
+                        🌿 Emerald Glow
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DARAJALAR TAB -->
+        <div id="tab-darajalar" class="tab-content hidden w-full">
+            <h2 class="text-sm font-bold mb-3 text-cyan-300 flex items-center justify-between">
+                <span><i class="fas fa-crown text-amber-400"></i> Soat Darajalari</span>
+            </h2>
+            <div id="watchesGrid" class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- SOZLAMALAR TAB -->
+        <div id="tab-sozlamalar" class="tab-content hidden w-full glass-card p-5 rounded-3xl">
+            <h2 class="text-lg font-bold mb-3 text-cyan-400 flex items-center gap-2">
+                <i class="fas fa-sliders-h"></i> Sozlamalar & Profil
+            </h2>
+            <form id="profileEditForm" class="space-y-3" onsubmit="saveProfileEdit(event)">
+                <div>
+                    <label class="block text-[11px] text-gray-300 mb-1">Ism:</label>
+                    <input type="text" id="editName" required class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-cyan-400 text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-gray-300 mb-1">Email Pochta:</label>
+                    <input type="email" id="editEmail" required class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-cyan-400 text-white">
+                </div>
+                <div class="pt-2 flex gap-2">
+                    <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
+                        Saqlash
+                    </button>
+                    <button type="button" onclick="resetGameData()" class="bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-2.5 rounded-xl text-xs font-bold hover:bg-red-500/30 transition">
+                        Tozalash
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="w-full max-w-md p-3 z-20">
+        <div class="glass-card rounded-2xl p-1.5 flex justify-around items-center border border-white/10 shadow-2xl">
+            <button onclick="openTab('asosiy')" id="nav-asosiy" class="nav-btn flex-1 py-1.5 flex flex-col items-center justify-center text-cyan-400 font-bold transition">
+                <i class="fas fa-home text-base mb-0.5"></i>
+                <span class="text-[9px]">Asosiy</span>
+            </button>
+            <button onclick="openTab('minigames')" id="nav-minigames" class="nav-btn flex-1 py-1.5 flex flex-col items-center justify-center text-gray-400 hover:text-white transition">
+                <i class="fas fa-gamepad text-base mb-0.5"></i>
+                <span class="text-[9px]">O'yinlar</span>
+            </button>
+            <button onclick="openTab('bank')" id="nav-bank" class="nav-btn flex-1 py-1.5 flex flex-col items-center justify-center text-gray-400 hover:text-white transition">
+                <i class="fas fa-university text-base mb-0.5"></i>
+                <span class="text-[9px]">Bank</span>
+            </button>
+            <button onclick="openTab('dukkon')" id="nav-dukkon" class="nav-btn flex-1 py-1.5 flex flex-col items-center justify-center text-gray-400 hover:text-white transition">
+                <i class="fas fa-store text-base mb-0.5"></i>
+                <span class="text-[9px]">Dukkon</span>
+            </button>
+            <button onclick="openTab('liderlar')" id="nav-liderlar" class="nav-btn flex-1 py-1.5 flex flex-col items-center justify-center text-gray-400 hover:text-white transition">
+                <i class="fas fa-trophy text-base mb-0.5"></i>
+                <span class="text-[9px]">Liderlar</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MODAL: LIMITNI OSHIRISH DO'KONI (YANGI MODAL) -->
+    <div id="limitModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden" onclick="closeLimitModal()">
+        <div class="glass-card w-full max-w-sm p-5 rounded-3xl border border-amber-500/40 text-center space-y-3" onclick="event.stopPropagation()">
+            <div class="w-12 h-12 bg-gradient-to-tr from-amber-400 to-yellow-600 rounded-2xl flex items-center justify-center text-xl text-white mx-auto shadow-lg">
+                <i class="fas fa-battery-charging"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">Energiya Limitini Oshirish</h3>
+            <p class="text-xs text-gray-300">Limitni kengaytiring va ko'proq uzluksiz kliklar qiling!</p>
+
+            <div class="space-y-2 max-h-[50vh] overflow-y-auto pr-1 text-left" id="limitUpgradesContainer">
+                <!-- JS dynamically renders limit options -->
+            </div>
+
+            <button onclick="closeLimitModal()" class="w-full text-xs text-gray-400 pt-2 border-t border-white/10">
+                Yopish
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 1: AUDIO TRACK SELECTOR MODAL -->
+    <div id="audioModal" class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden" onclick="closeAudioModal()">
+        <div class="glass-card w-full max-w-xs p-5 rounded-3xl border border-cyan-500/30 text-center space-y-3" onclick="event.stopPropagation()">
+            <h3 class="text-base font-bold text-white flex items-center justify-center gap-2">
+                <i class="fas fa-music text-cyan-400"></i> Saundtreklar
+            </h3>
+            <p class="text-xs text-gray-300">Sokin fon musiqasini tanlang:</p>
+
+            <div class="space-y-2 text-left">
+                <button onclick="selectSoundtrack('lofi')" id="track-lofi" class="w-full glass-btn p-3 rounded-xl flex items-center justify-between text-xs font-semibold text-cyan-300">
+                    <span>☕ Chill Lofi Beats</span>
+                    <i class="fas fa-volume-up opacity-0"></i>
+                </button>
+                <button onclick="selectSoundtrack('synth')" id="track-synth" class="w-full glass-btn p-3 rounded-xl flex items-center justify-between text-xs font-semibold text-purple-300">
+                    <span>🌌 Cosmic Synthwave</span>
+                    <i class="fas fa-volume-up opacity-0"></i>
+                </button>
+                <button onclick="selectSoundtrack('nature')" id="track-nature" class="w-full glass-btn p-3 rounded-xl flex items-center justify-between text-xs font-semibold text-emerald-300">
+                    <span>🍃 Yengil Tabiat Sadosi</span>
+                    <i class="fas fa-volume-up opacity-0"></i>
+                </button>
+                <button onclick="selectSoundtrack('off')" id="track-off" class="w-full glass-btn p-3 rounded-xl flex items-center justify-between text-xs font-semibold text-red-400">
+                    <span>🔇 Ovozni O'chirish</span>
+                    <i class="fas fa-volume-mute opacity-0"></i>
+                </button>
+            </div>
+
+            <button onclick="closeAudioModal()" class="w-full text-xs text-gray-400 pt-2 border-t border-white/10">
+                Yopish
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 2: IMAGE CHANGE CONTEXT MENU -->
+    <div id="imageMenuModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50 hidden" onclick="closeImageMenu(event)">
+        <div class="glass-card w-full max-w-xs p-5 rounded-3xl border border-white/20 shadow-2xl text-center space-y-3" onclick="event.stopPropagation()">
+            <h3 class="text-base font-bold text-white mb-2 flex items-center justify-center gap-2">
+                <i class="fas fa-camera-retro text-cyan-400"></i> Rasmni Almashtirish
+            </h3>
+            
+            <button onclick="triggerFileInput('camera')" class="w-full glass-btn py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold text-cyan-300 hover:bg-white/10 transition">
+                <i class="fas fa-camera"></i> Suratga olish
+            </button>
+
+            <button onclick="triggerFileInput('gallery')" class="w-full glass-btn py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold text-purple-300 hover:bg-white/10 transition">
+                <i class="fas fa-images"></i> Galereyadan yuklash
+            </button>
+
+            <button onclick="removeCustomImage()" id="resetImgBtn" class="w-full glass-btn py-2.5 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 transition hidden">
+                <i class="fas fa-trash-alt"></i> Asl rasmga qaytarish
+            </button>
+
+            <button onclick="closeImageMenu()" class="w-full text-xs text-gray-400 pt-2 border-t border-white/10">
+                Bekor qilish
+            </button>
+        </div>
+    </div>
+
+    <!-- REGISTRATION MODAL -->
+    <div id="registerModal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="glass-card w-full max-w-sm p-6 rounded-3xl border border-cyan-500/30 text-center">
+            <div class="w-16 h-16 bg-gradient-to-tr from-cyan-400 to-purple-600 rounded-2xl flex items-center justify-center text-2xl text-white mx-auto mb-3 shadow-lg">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h2 class="text-xl font-extrabold text-white mb-1">Hush Kelibsiz!</h2>
+            <p class="text-xs text-gray-300 mb-4">O'yinni boshlash uchun profil yarating</p>
+
+            <form onsubmit="handleRegistration(event)" class="space-y-3 text-left">
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">Ismingiz:</label>
+                    <input type="text" id="regName" required placeholder="Masalan: Ali" class="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-cyan-400 text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">Yosh:</label>
+                    <input type="number" id="regAge" min="1" max="120" required placeholder="Masalan: 20" class="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-cyan-400 text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">Email:</label>
+                    <input type="email" id="regEmail" required placeholder="example@mail.com" class="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-cyan-400 text-white">
+                </div>
+                <button type="submit" class="w-full mt-3 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold py-3 rounded-xl text-xs shadow-lg hover:opacity-95 transition">
+                    O'yinni Boshlash <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden Inputs -->
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageSelected(event)">
+    <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handleImageSelected(event)">
+
+    <script>
+        /* GAME STATE WITH ENERGY & LIMIT UPGRADES */
+        let state = {
+            user: null,
+            totalSeconds: 0,
+            totalClicks: 0,
+            customImage: null,
+            activeWatchId: 'lvl1',
+            activeFrame: 'frame-neon',
+            activeTheme: 'cyber',
+            activeTrack: 'synth',
+            bankDeposited: 0,
+            lastAutoClickDate: null,
+            boostActive: false,
+            autoActive: false,
+            // ENERGY SYSTEM
+            maxEnergy: 100,
+            currentEnergy: 100,
+            quests: {
+                click50: { done: false, target: 50, current: 0, reward: 120 },
+                collect300: { done: false, target: 300, current: 0, reward: 300 }
+            }
+        };
+
+        const limitUpgrades = [
+            { targetMax: 150, costSeconds: 600, title: "150 Limit (+50)", desc: "10 minut vaqt evaziga 150 limit" },
+            { targetMax: 200, costSeconds: 1800, title: "200 Limit (+50)", desc: "30 minut vaqt evaziga 200 limit" },
+            { targetMax: 250, costSeconds: 3600, title: "250 Limit (+50)", desc: "1 soat vaqt evaziga 250 limit" },
+            { targetMax: 300, costSeconds: 7200, title: "300 Limit (+50)", desc: "2 soat vaqt evaziga 300 limit" },
+            { targetMax: 400, costSeconds: 14400, title: "400 Limit (+100)", desc: "4 soat vaqt evaziga 400 limit" },
+            { targetMax: 500, costSeconds: 28800, title: "500 Limit (+100)", desc: "8 soat vaqt evaziga 500 max limit" },
+        ];
+
+        const watches = [
+            { id: 'lvl1', name: 'Eski O\'yinchoq Soat', reqSeconds: 0, desc: 'Eski plastik bolalar o\'yinchoq soati', img: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=600&q=80' },
+            { id: 'lvl2', name: 'Klassik Qo\'l Soat', reqSeconds: 300, desc: 'Oddiy charm tasmali soat', img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80' },
+            { id: 'lvl3', name: 'Zamonaviy Aqlli Soat', reqSeconds: 3600, desc: 'Elektron sensorli aqlli soat', img: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=600&q=80' },
+            { id: 'lvl4', name: 'Sport Xronometri', reqSeconds: 21600, desc: 'Suvga va zarbaga chidamli metall soat', img: 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&w=600&q=80' },
+            { id: 'lvl5', name: 'Oltin Premium Rolex', reqSeconds: 86400, desc: 'Qimmatbaho olmos va oltin soat', img: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=600&q=80' }
+        ];
+
+        const shopFrames = [
+            { id: 'frame-neon', name: 'Neon Blue', cost: 0, class: 'frame-neon' },
+            { id: 'frame-gold', name: 'Royal Gold', cost: 600, class: 'frame-gold' },
+            { id: 'frame-plasma', name: 'Pink Plasma', cost: 1800, class: 'frame-plasma' },
+            { id: 'frame-emerald', name: 'Emerald Glow', cost: 3600, class: 'frame-emerald' }
+        ];
+
+        /* AUDIO SYSTEM */
+        let audioCtx = null;
+        let ambientOsc1 = null, ambientOsc2 = null, ambientGain = null;
+
+        function initAudio() {
+            if (audioCtx) return;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                ambientGain = audioCtx.createGain();
+                ambientGain.gain.setValueAtTime(0.015, audioCtx.currentTime);
+                ambientGain.connect(audioCtx.destination);
+                playTrackSynth();
+            } catch(e){}
+        }
+
+        function playTrackSynth() {
+            if (!audioCtx || state.activeTrack === 'off') {
+                if (ambientGain) ambientGain.gain.setValueAtTime(0, audioCtx.currentTime);
+                return;
+            }
+
+            ambientGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            if (ambientOsc1) ambientOsc1.stop();
+            if (ambientOsc2) ambientOsc2.stop();
+
+            ambientOsc1 = audioCtx.createOscillator();
+            ambientOsc2 = audioCtx.createOscillator();
+
+            if (state.activeTrack === 'lofi') {
+                ambientOsc1.frequency.setValueAtTime(220, audioCtx.currentTime);
+                ambientOsc2.frequency.setValueAtTime(277.18, audioCtx.currentTime);
+            } else if (state.activeTrack === 'synth') {
+                ambientOsc1.frequency.setValueAtTime(130.81, audioCtx.currentTime);
+                ambientOsc2.frequency.setValueAtTime(196.00, audioCtx.currentTime);
+            } else if (state.activeTrack === 'nature') {
+                ambientOsc1.frequency.setValueAtTime(329.63, audioCtx.currentTime);
+                ambientOsc2.frequency.setValueAtTime(493.88, audioCtx.currentTime);
+            }
+
+            ambientOsc1.connect(ambientGain);
+            ambientOsc2.connect(ambientGain);
+            ambientOsc1.start();
+            ambientOsc2.start();
+        }
+
+        function selectSoundtrack(trackId) {
+            state.activeTrack = trackId;
+            saveState();
+            playTrackSynth();
+            updateAudioModalUI();
+        }
+
+        function openAudioModal() {
+            initAudio();
+            document.getElementById('audioModal').classList.remove('hidden');
+            updateAudioModalUI();
+        }
+
+        function closeAudioModal() {
+            document.getElementById('audioModal').classList.add('hidden');
+        }
+
+        function updateAudioModalUI() {
+            ['lofi', 'synth', 'nature', 'off'].forEach(t => {
+                const btn = document.getElementById(`track-${t}`);
+                const icon = btn.querySelector('i');
+                if (state.activeTrack === t) {
+                    btn.classList.add('border-cyan-400', 'bg-white/10');
+                    icon.classList.remove('opacity-0');
+                } else {
+                    btn.classList.remove('border-cyan-400', 'bg-white/10');
+                    icon.classList.add('opacity-0');
+                }
+            });
+        }
+
+        function playClickSound() {
+            if (!audioCtx || state.activeTrack === 'off') return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(state.boostActive ? 850 : 500, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.07);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.07);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.07);
+            } catch(e){}
+        }
+
+        /* INITIALIZATION & STORAGE */
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            setupEventListeners();
+            startPassiveIncomeTimer();
+            startEnergyRegenTimer();
+            updateUI();
+            renderWatchesGrid();
+            renderFramesGrid();
+            renderLeaderboard();
+        });
+
+        function loadState() {
+            const saved = localStorage.getItem('vaqt_kliker_pro_data');
+            if (saved) {
+                try { state = { ...state, ...JSON.parse(saved) }; } catch(e){}
+            }
+
+            if (state.currentEnergy === undefined) state.currentEnergy = 100;
+            if (state.maxEnergy === undefined) state.maxEnergy = 100;
+
+            if (!state.user) {
+                document.getElementById('registerModal').classList.remove('hidden');
+            } else {
+                document.getElementById('registerModal').classList.add('hidden');
+            }
+
+            setTheme(state.activeTheme || 'cyber');
+        }
+
+        function saveState() {
+            localStorage.setItem('vaqt_kliker_pro_data', JSON.stringify(state));
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            state.user = {
+                name: document.getElementById('regName').value,
+                age: document.getElementById('regAge').value,
+                email: document.getElementById('regEmail').value
+            };
+            saveState();
+            document.getElementById('registerModal').classList.add('hidden');
+            initAudio();
+            updateUI();
+        }
+
+        function saveProfileEdit(e) {
+            e.preventDefault();
+            state.user.name = document.getElementById('editName').value;
+            state.user.email = document.getElementById('editEmail').value;
+            saveState();
+            updateUI();
+            alert("Profil ma'lumotlari saqlandi!");
+        }
+
+        function resetGameData() {
+            if (confirm("Haqiqatdan ham barcha o'yin ma'lumotlarini o'chirib tashlamoqchimisiz?")) {
+                localStorage.removeItem('vaqt_kliker_pro_data');
+                location.reload();
+            }
+        }
+
+        function formatTimeDetailed(totalSec) {
+            if (totalSec <= 0) return "0 soniya";
+
+            const minute = 60, hour = 3600, day = 86400, week = 604800;
+            let weeks = Math.floor(totalSec / week);
+            let remSec = totalSec % week;
+            let days = Math.floor(remSec / day);
+            remSec %= day;
+            let hours = Math.floor(remSec / hour);
+            remSec %= hour;
+            let minutes = Math.floor(remSec / minute);
+            let seconds = remSec % minute;
+
+            let parts = [];
+            if (weeks > 0) parts.push(`${weeks} hafta`);
+            if (days > 0) parts.push(`${days} sutka`);
+            if (hours > 0) parts.push(`${hours} soat`);
+            if (minutes > 0) parts.push(`${minutes} minut`);
+            if (seconds > 0 || parts.length === 0) parts.push(`${seconds} soniya`);
+
+            return parts.slice(0, 3).join(" ");
+        }
+
+        /* ENERGY REGENERATION TIMER (HAR 2 SONIYADA +1 ENERGIYA) */
+        function startEnergyRegenTimer() {
+            setInterval(() => {
+                if (state.currentEnergy < state.maxEnergy) {
+                    state.currentEnergy++;
+                    saveState();
+                    updateUI();
+                }
+            }, 2000);
+        }
+
+        /* CLICK & BOOST LOGIC */
+        function setupEventListeners() {
+            const bigBtn = document.getElementById('bigClockBtn');
+            bigBtn.addEventListener('click', (e) => {
+                initAudio();
+                handleBigButtonClick(e);
+            });
+
+            let pressTimer = null;
+            const startPress = () => { pressTimer = setTimeout(() => openImageMenu(), 700); };
+            const cancelPress = () => { if (pressTimer) clearTimeout(pressTimer); };
+
+            bigBtn.addEventListener('mousedown', startPress);
+            bigBtn.addEventListener('touchstart', startPress);
+            bigBtn.addEventListener('mouseup', cancelPress);
+            bigBtn.addEventListener('mouseleave', cancelPress);
+            bigBtn.addEventListener('touchend', cancelPress);
+        }
+
+        function handleBigButtonClick(e) {
+            // ENERGIYA TEKSHIRUVI
+            if (state.currentEnergy <= 0) {
+                const badge = document.getElementById('energyBadge');
+                badge.classList.add('shake-energy');
+                setTimeout(() => badge.classList.remove('shake-energy'), 300);
+                return;
+            }
+
+            // Energiya 1 ga kamayadi
+            state.currentEnergy--;
+
+            createRipple(e, document.getElementById('bigClockBtn'));
+
+            const addedSec = state.boostActive ? 5 : 1;
+            state.totalSeconds += addedSec;
+            state.totalClicks += 1;
+
+            if (state.quests.click50 && !state.quests.click50.done) {
+                state.quests.click50.current += 1;
+            }
+            if (state.quests.collect300 && !state.quests.collect300.done) {
+                state.quests.collect300.current += addedSec;
+            }
+
+            playClickSound();
+            spawnFloatingParticle(e, addedSec);
+            saveState();
+            updateUI();
+        }
+
+        function createRipple(event, element) {
+            const rect = element.getBoundingClientRect();
+            const circle = document.createElement('span');
+            const diameter = Math.max(rect.width, rect.height);
+            const radius = diameter / 2;
+
+            const clientX = event.clientX || (event.touches && event.touches[0].clientX) || (rect.left + radius);
+            const clientY = event.clientY || (event.touches && event.touches[0].clientY) || (rect.top + radius);
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${clientX - rect.left - radius}px`;
+            circle.style.top = `${clientY - rect.top - radius}px`;
+            circle.classList.add('ripple');
+
+            const ripple = element.getElementsByClassName('ripple')[0];
+            if (ripple) ripple.remove();
+            element.appendChild(circle);
+        }
+
+        function spawnFloatingParticle(e, addedSec) {
+            const particle = document.createElement('div');
+            particle.className = 'click-particle';
+
+            const x = e.clientX || (e.touches && e.touches[0].clientX) || window.innerWidth / 2;
+            const y = e.clientY || (e.touches && e.touches[0].clientY) || window.innerHeight / 2;
+
+            particle.style.left = `${x}px`;
+            particle.style.top = `${y}px`;
+
+            if (state.customImage) {
+                const imgBadge = document.createElement('img');
+                imgBadge.src = state.customImage;
+                imgBadge.className = 'w-6 h-6 rounded-full border border-cyan-400 object-cover shadow-md';
+                particle.appendChild(imgBadge);
+            }
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = `+${addedSec}s`;
+            textSpan.className = addedSec > 1 ? 'text-amber-300' : 'text-cyan-300';
+            particle.appendChild(textSpan);
+
+            document.body.appendChild(particle);
+            setTimeout(() => particle.remove(), 800);
+        }
+
+        /* LIMIT UPGRADES MODAL LOGIC */
+        function openLimitModal() {
+            renderLimitUpgrades();
+            document.getElementById('limitModal').classList.remove('hidden');
+        }
+
+        function closeLimitModal() {
+            document.getElementById('limitModal').classList.add('hidden');
+        }
+
+        function renderLimitUpgrades() {
+            const container = document.getElementById('limitUpgradesContainer');
+            container.innerHTML = '';
+
+            limitUpgrades.forEach((upg) => {
+                const isOwned = state.maxEnergy >= upg.targetMax;
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl glass-card flex items-center justify-between border ${
+                    isOwned ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-white/10'
+                }`;
+
+                card.innerHTML = `
+                    <div>
+                        <h4 class="font-bold text-xs text-white">${upg.title}</h4>
+                        <p class="text-[10px] text-gray-300">${upg.desc}</p>
+                        <span class="text-[9px] text-amber-300 font-semibold">Narxi: ${formatTimeDetailed(upg.costSeconds)}</span>
+                    </div>
+                    <button onclick="buyLimitUpgrade(${upg.targetMax}, ${upg.costSeconds})" ${isOwned ? 'disabled' : ''} 
+                            class="px-3 py-1.5 rounded-xl text-[10px] font-bold transition ${
+                                isOwned 
+                                ? 'bg-emerald-600/50 text-emerald-200 cursor-default' 
+                                : 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white hover:brightness-110 active:scale-95'
+                            }">
+                        ${isOwned ? 'Sotib Olingan' : 'Oshirish'}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function buyLimitUpgrade(targetMax, costSeconds) {
+            if (state.maxEnergy >= targetMax) return;
+            if (state.totalSeconds < costSeconds) {
+                alert("Ushbu limitni oshirish uchun vaqtingiz yetarli emas!");
+                return;
+            }
+
+            state.totalSeconds -= costSeconds;
+            state.maxEnergy = targetMax;
+            state.currentEnergy = targetMax; // to'liq to'ldirish
+            saveState();
+            updateUI();
+            renderLimitUpgrades();
+            alert(`Tabriklaymiz! Energiya limitingiz ${targetMax} ga oshirildi! 🎉`);
+        }
+
+        function activateBoost() {
+            const costSeconds = 180;
+            if (state.boostActive) return;
+            if (state.totalSeconds < costSeconds) {
+                alert("Boost uchun kamida 3 minut to'plangan vaqt kerak!");
+                return;
+            }
+
+            state.totalSeconds -= costSeconds;
+            state.boostActive = true;
+            let timeLeft = 15;
+
+            const badge = document.getElementById('boostActiveBadge');
+            const timerText = document.getElementById('boostTimerText');
+            badge.classList.remove('hidden');
+
+            const interval = setInterval(() => {
+                timeLeft--;
+                timerText.textContent = `${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    state.boostActive = false;
+                    badge.classList.add('hidden');
+                    updateUI();
+                }
+            }, 1000);
+
+            saveState();
+            updateUI();
+        }
+
+        function activateAutoClick() {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            if (state.lastAutoClickDate === todayStr) {
+                alert("Avto-bosish imkoniyati bugun ishlatilgan!");
+                return;
+            }
+
+            state.autoActive = true;
+            state.lastAutoClickDate = todayStr;
+            let timeLeft = 60;
+
+            const badge = document.getElementById('autoActiveBadge');
+            const timerText = document.getElementById('autoTimerText');
+            badge.classList.remove('hidden');
+
+            const autoInterval = setInterval(() => {
+                timeLeft--;
+                timerText.textContent = `${timeLeft}s`;
+
+                // Avto-bosish energiya talab qilmaydi
+                const addedSec = state.boostActive ? 5 : 1;
+                state.totalSeconds += addedSec;
+                state.totalClicks += 1;
+                playClickSound();
+                updateUI();
+
+                if (timeLeft <= 0) {
+                    clearInterval(autoInterval);
+                    state.autoActive = false;
+                    badge.classList.add('hidden');
+                    saveState();
+                    updateUI();
+                }
+            }, 1000);
+
+            saveState();
+            updateUI();
+        }
+
+        /* TIME RUSH MINI-GAME */
+        let rushTimerInterval = null;
+        let rushClicksCount = 0;
+
+        function startTimeRushGame() {
+            document.getElementById('startRushBtn').classList.add('hidden');
+            document.getElementById('rushGameArea').classList.remove('hidden');
+
+            rushClicksCount = 0;
+            let timeLeft = 30;
+            document.getElementById('rushClicks').textContent = '0';
+            document.getElementById('rushTimer').textContent = '30s';
+
+            rushTimerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('rushTimer').textContent = `${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(rushTimerInterval);
+                    finishTimeRushGame();
+                }
+            }, 1000);
+        }
+
+        function registerRushClick() {
+            rushClicksCount++;
+            document.getElementById('rushClicks').textContent = rushClicksCount;
+            playClickSound();
+        }
+
+        function finishTimeRushGame() {
+            const rewardSeconds = rushClicksCount * 2;
+            state.totalSeconds += rewardSeconds;
+            saveState();
+            updateUI();
+
+            alert(`Vaqt tugadi! Siz ${rushClicksCount} marta bosdingiz va +${formatTimeDetailed(rewardSeconds)} mukofot vaqt oldingiz! 🎉`);
+
+            document.getElementById('rushGameArea').classList.add('hidden');
+            document.getElementById('startRushBtn').classList.remove('hidden');
+        }
+
+        /* TIME BANK & PASSIVE INCOME */
+        function startPassiveIncomeTimer() {
+            setInterval(() => {
+                if (state.bankDeposited > 0) {
+                    const passiveYield = Math.max(1, Math.floor(state.bankDeposited * 0.00001));
+                    state.totalSeconds += passiveYield;
+                    updateUI();
+                }
+            }, 1000);
+        }
+
+        function depositToBank() {
+            const amount = 600;
+            if (state.totalSeconds < amount) {
+                alert("Bankka qo'yish uchun kamida 10 minut kerak!");
+                return;
+            }
+            state.totalSeconds -= amount;
+            state.bankDeposited += amount;
+            saveState();
+            updateUI();
+        }
+
+        function withdrawFromBank() {
+            if (state.bankDeposited <= 0) return;
+            state.totalSeconds += state.bankDeposited;
+            state.bankDeposited = 0;
+            saveState();
+            updateUI();
+        }
+
+        /* CUSTOMIZATION & SHOP */
+        function setTheme(themeName) {
+            state.activeTheme = themeName;
+            document.body.className = `theme-${themeName} flex flex-col min-h-screen justify-between items-center relative select-none`;
+            saveState();
+        }
+
+        function buyFrame(frameId, cost) {
+            if (state.totalSeconds < cost) {
+                alert("Ushbu ramkani sotib olish uchun vaqtingiz yetarli emas!");
+                return;
+            }
+            state.totalSeconds -= cost;
+            state.activeFrame = frameId;
+            saveState();
+            updateUI();
+            renderFramesGrid();
+        }
+
+        function renderFramesGrid() {
+            const grid = document.getElementById('framesGrid');
+            grid.innerHTML = '';
+
+            shopFrames.forEach(f => {
+                const isEquipped = state.activeFrame === f.id;
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl glass-card flex flex-col justify-between border ${isEquipped ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/10'}`;
+
+                card.innerHTML = `
+                    <div>
+                        <h4 class="font-bold text-xs text-white">${f.name}</h4>
+                        <p class="text-[10px] text-gray-400">${f.cost === 0 ? 'Bepul' : formatTimeDetailed(f.cost)}</p>
+                    </div>
+                    <button onclick="buyFrame('${f.id}', ${f.cost})" class="mt-2 py-1 px-2 rounded-xl text-[10px] font-bold ${
+                        isEquipped ? 'bg-cyan-500 text-white' : 'bg-white/10 text-cyan-300 hover:bg-white/20'
+                    }">
+                        ${isEquipped ? 'Taqilgan' : 'Tanlash'}
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        /* IMAGE CUSTOMIZATION */
+        function openImageMenu() {
+            document.getElementById('imageMenuModal').classList.remove('hidden');
+            if (state.customImage) document.getElementById('resetImgBtn').classList.remove('hidden');
+            else document.getElementById('resetImgBtn').classList.add('hidden');
+        }
+
+        function closeImageMenu() {
+            document.getElementById('imageMenuModal').classList.add('hidden');
+        }
+
+        function triggerFileInput(type) {
+            closeImageMenu();
+            if (type === 'camera') document.getElementById('cameraInput').click();
+            else document.getElementById('galleryInput').click();
+        }
+
+        function handleImageSelected(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                state.customImage = event.target.result;
+                saveState();
+                updateUI();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeCustomImage() {
+            state.customImage = null;
+            closeImageMenu();
+            saveState();
+            updateUI();
+        }
+
+        /* LEADERBOARD & QUESTS RENDERING */
+        function renderLeaderboard() {
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = '';
+
+            const leaders = [
+                { name: state.user ? state.user.name : "Siz", seconds: state.totalSeconds, isUser: true },
+                { name: "Sardor_Timelord", seconds: 125000, isUser: false },
+                { name: "Malika_Clock", seconds: 86400, isUser: false },
+                { name: "Diyor_Cyber", seconds: 43200, isUser: false },
+                { name: "Jasur_Chrono", seconds: 18000, isUser: false }
+            ].sort((a,b) => b.seconds - a.seconds);
+
+            leaders.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = `p-3 rounded-2xl flex items-center justify-between border ${item.isUser ? 'bg-cyan-500/10 border-cyan-400' : 'bg-black/30 border-white/5'}`;
+                el.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="font-extrabold text-xs w-5 text-center ${index === 0 ? 'text-amber-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-gray-500'}">#${index+1}</span>
+                        <div>
+                            <h4 class="text-xs font-bold text-white">${item.name} ${item.isUser ? '(Siz)' : ''}</h4>
+                            <p class="text-[10px] text-gray-400">${formatTimeDetailed(item.seconds)}</p>
+                        </div>
+                    </div>
+                    <i class="fas ${index < 3 ? 'fa-crown text-amber-400' : 'fa-user text-gray-500'} text-xs"></i>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function renderQuests() {
+            const list = document.getElementById('questsList');
+            list.innerHTML = '';
+
+            const quest1Done = state.quests.click50.current >= state.quests.click50.target;
+            const quest2Done = state.quests.collect300.current >= state.quests.collect300.target;
+
+            list.innerHTML = `
+                <div class="p-3 bg-black/30 rounded-2xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold">50 marta klik qilish</h4>
+                        <p class="text-[10px] text-gray-400">Mukofot: +2 minut</p>
+                    </div>
+                    <span class="text-[10px] px-2.5 py-1 rounded-full ${quest1Done ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'bg-gray-800 text-gray-400'}">
+                        ${quest1Done ? 'Bajarildi ✓' : `${state.quests.click50.current}/50`}
+                    </span>
+                </div>
+                <div class="p-3 bg-black/30 rounded-2xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold">300 soniya vaqt yig'ish</h4>
+                        <p class="text-[10px] text-gray-400">Mukofot: +5 minut</p>
+                    </div>
+                    <span class="text-[10px] px-2.5 py-1 rounded-full ${quest2Done ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'bg-gray-800 text-gray-400'}">
+                        ${quest2Done ? 'Bajarildi ✓' : `${Math.min(300, state.quests.collect300.current)}/300s`}
+                    </span>
+                </div>
+            `;
+        }
+
+        function renderWatchesGrid() {
+            const grid = document.getElementById('watchesGrid');
+            grid.innerHTML = '';
+
+            watches.forEach(w => {
+                const isUnlocked = state.totalSeconds >= w.reqSeconds;
+                const isEquipped = state.activeWatchId === w.id && !state.customImage;
+
+                const card = document.createElement('div');
+                card.className = `glass-card p-3 rounded-2xl flex items-center gap-3 border ${isEquipped ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/10'}`;
+
+                card.innerHTML = `
+                    <img src="${w.img}" class="w-14 h-14 rounded-xl object-cover border border-white/20">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-xs text-white">${w.name}</h4>
+                        <p class="text-[10px] text-gray-400 mb-1">${w.desc}</p>
+                        <span class="text-[9px] ${isUnlocked ? 'text-cyan-300' : 'text-amber-400 font-semibold'}">
+                            ${isUnlocked ? 'Ochiq' : 'Kerak: ' + formatTimeDetailed(w.reqSeconds)}
+                        </span>
+                    </div>
+                    <button onclick="selectWatch('${w.id}')" class="px-2.5 py-1 rounded-xl text-[10px] font-bold ${
+                        isEquipped ? 'bg-cyan-500 text-white' : isUnlocked ? 'bg-white/10 text-cyan-300' : 'bg-gray-800 text-gray-500'
+                    }">
+                        ${isEquipped ? 'Taqilgan' : isUnlocked ? 'Taqish' : 'Qulflangan'}
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function selectWatch(watchId) {
+            const watch = watches.find(w => w.id === watchId);
+            if (!watch || state.totalSeconds < watch.reqSeconds) return;
+
+            state.activeWatchId = watchId;
+            state.customImage = null;
+            saveState();
+            updateUI();
+            renderWatchesGrid();
+        }
+
+        /* UPDATE ALL UI COMPONENTS */
+        function updateUI() {
+            document.getElementById('formattedTimeDisplay').textContent = formatTimeDetailed(state.totalSeconds);
+            document.getElementById('totalClicksDisplay').textContent = state.totalClicks.toLocaleString();
+
+            // Energy update
+            document.getElementById('energyText').textContent = `${state.currentEnergy} / ${state.maxEnergy}`;
+            document.getElementById('currentLimitBtnLabel').textContent = `${state.maxEnergy} Max`;
+
+            const passiveYield = state.bankDeposited > 0 ? Math.max(1, Math.floor(state.bankDeposited * 0.00001)) : 0;
+            document.getElementById('bankYieldDisplay').textContent = `+${passiveYield}s/s`;
+
+            // Bank display
+            document.getElementById('bankDepositedDisplay').textContent = formatTimeDetailed(state.bankDeposited);
+            document.getElementById('bankPassiveYieldText').textContent = `+${passiveYield}s / sekund`;
+
+            // Frame applying
+            const bigBtn = document.getElementById('bigClockBtn');
+            bigBtn.className = `ripple-container relative w-52 h-52 sm:w-60 sm:h-60 rounded-full p-2 glass-btn border-4 shadow-2xl hover:scale-105 active:scale-95 transition-all duration-150 flex items-center justify-center overflow-hidden cursor-pointer ${state.activeFrame}`;
+
+            // Image applying
+            const currentWatch = watches.find(w => w.id === state.activeWatchId) || watches[0];
+            const clockImg = document.getElementById('bigClockImg');
+            if (state.customImage) {
+                clockImg.src = state.customImage;
+                document.getElementById('currentWatchName').textContent = "Maxsus Rasm";
+            } else {
+                clockImg.src = currentWatch.img;
+                document.getElementById('currentWatchName').textContent = currentWatch.name.split(' ')[0];
+            }
+
+            // Profile info
+            if (state.user) {
+                document.getElementById('userNameDisplay').textContent = state.user.name;
+                document.getElementById('userAvatar').textContent = state.user.name.charAt(0).toUpperCase();
+
+                let rank = "Novice Timelord";
+                if (state.totalSeconds > 86400) rank = "Master Timelord";
+                else if (state.totalSeconds > 3600) rank = "Advanced Timelord";
+                document.getElementById('userRankDisplay').textContent = rank;
+            }
+
+            renderQuests();
+            renderLeaderboard();
+        }
+
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.className = 'nav-btn flex-1 py-1.5 flex flex-col items-center justify-center text-gray-400 hover:text-white transition');
+
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activeTab) activeTab.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) activeNav.className = 'nav-btn flex-1 py-1.5 flex flex-col items-center justify-center text-cyan-400 font-bold transition';
+
+            if (tabId === 'darajalar') renderWatchesGrid();
+            if (tabId === 'dukkon') renderFramesGrid();
+            if (tabId === 'liderlar') renderLeaderboard();
+        }
+    </script>
+</body>
+</html>
